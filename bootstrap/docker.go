@@ -30,15 +30,22 @@ func runDeprecatedDockerIntegration(sh *shell.Shell, cmd []string) error {
 	var warnNotSet = func(k1, k2 string) {
 		sh.Warningf("%s is set, but without %s, which it requires. You should be able to safely remove this from your pipeline.", k1, k2)
 	}
-
+	
+	var newCmd []string
+	for _, cmdArg := range cmd {
+		for _, arg := range strings.Split(cmdArg, " ") {
+			newCmd = append(newCmd, arg)
+		}
+	}
+	
 	switch {
 	case sh.Env.Exists(`BUILDKITE_DOCKER_COMPOSE_CONTAINER`):
 		sh.Warningf("BUILDKITE_DOCKER_COMPOSE_CONTAINER is set, which is deprecated in Agent v3 and will be removed in v4. Consider using the :docker: docker-compose plugin instead at https://github.com/buildkite-plugins/docker-compose-buildkite-plugin.")
-		return runDockerComposeCommand(sh, cmd)
+		return runDockerComposeCommand(sh, newCmd)
 
 	case sh.Env.Exists(`BUILDKITE_DOCKER`):
 		sh.Warningf("BUILDKITE_DOCKER is set, which is deprecated in Agent v3 and will be removed in v4. Consider using the docker plugin instead at https://github.com/buildkite-plugins/docker-buildkite-plugin.")
-		return runDockerCommand(sh, cmd)
+		return runDockerCommand(sh, newCmd)
 
 	case sh.Env.Exists(`BUILDKITE_DOCKER_COMPOSE_FILE`):
 		warnNotSet(`BUILDKITE_DOCKER_COMPOSE_FILE`, `BUILDKITE_DOCKER_COMPOSE_CONTAINER`)
